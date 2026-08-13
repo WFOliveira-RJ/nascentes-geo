@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>NascentesGeo — Reserva Fictícia da Serra do Ribeirão</title>
+<style>
+  :root{
+    --ink:#1f2937; --muted:#6b7280; --panel:#ffffff; --bg:#eef1ee;
+    --registrada:#2563eb; --em_analise:#d97706; --validada:#16a34a; --rejeitada:#dc2626;
+    --accent:#0f4c5c;
+  }
+  *{box-sizing:border-box; margin:0}
+  html,body{height:100%}
+  body{font:14px/1.45 "Segoe UI",system-ui,sans-serif; color:var(--ink); background:var(--bg); height:100dvh; display:flex; flex-direction:column; overflow:hidden}
+  header{background:var(--accent); color:#fff; padding:10px 16px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+  header h1{font-size:17px; font-weight:600}
+  header .sub{font-size:12px; opacity:.85}
+  header .tag{margin-left:auto; font-size:11px; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.35); padding:2px 8px; border-radius:999px}
+  #conStat{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.35)}
+  #conStat.on{background:rgba(22,163,74,.35)}
+  #conStat.off{background:rgba(220,38,38,.5)}
+  #app{flex:1; display:flex; min-height:0}
+  aside{width:250px; background:var(--panel); border-right:1px solid #d8dcd8; padding:14px; display:flex; flex-direction:column; gap:14px; overflow-y:auto}
+  aside h2{font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted)}
+  .filtro{display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:6px; cursor:pointer}
+  .filtro:hover{background:#f3f4f6}
+  .dot{width:12px; height:12px; border-radius:50%; flex:none; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+  .filtro .qt{margin-left:auto; color:var(--muted); font-size:12px}
+  button.acao{border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:8px; padding:9px 10px; font-size:13px; font-weight:600; cursor:pointer; width:100%}
+  button.acao.sec{background:#fff; color:var(--accent)}
+  button.acao[disabled]{opacity:.5; cursor:default}
+  #offBox{border:1px dashed #cfd4cf; border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px}
+  #offInfo{font-size:11.5px; color:var(--muted)}
+  #offInfo b{color:var(--ink)}
+  #offProg{height:8px; background:#e5e7eb; border-radius:999px; overflow:hidden; display:none}
+  #offProg i{display:block; height:100%; width:0; background:var(--accent); transition:width .15s}
+  #mapwrap{flex:1; position:relative; min-width:0; background:#e7ece4; touch-action:none}
+  #svgbase{position:absolute; inset:0; width:100%; height:100%; display:block}
+  #overlay{position:absolute; inset:0; overflow:hidden}
+  .mk{position:absolute; width:16px; height:16px; border-radius:50% 50% 50% 0; transform:translate(-8px,-14px) rotate(-45deg); border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); cursor:pointer}
+  .mk:hover{filter:brightness(1.15)}
+  .cluster{position:absolute; min-width:34px; height:34px; padding:0 6px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; transform:translate(-17px,-17px); border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.35); cursor:pointer}
+  .ctrl{position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:6px}
+  .ctrl button{width:38px; height:38px; border-radius:8px; border:1px solid #cfd4cf; background:#fff; font-size:17px; font-weight:700; color:var(--ink); cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  #popup{position:absolute; z-index:30; width:230px; background:#fff; border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.25); padding:12px; display:none}
+  #popup h3{font-size:14px; margin-bottom:6px; padding-right:16px}
+  #popup .linha{font-size:12px; color:var(--muted); margin-top:3px}
+  #popup .badge{display:inline-block; font-size:11px; font-weight:700; color:#fff; padding:2px 8px; border-radius:999px}
+  #popup .x{position:absolute; top:8px; right:10px; cursor:pointer; color:var(--muted); font-size:14px; padding:4px}
+  #form{position:absolute; z-index:30; width:230px; background:#fff; border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.25); padding:12px; display:none}
+  #form input{width:100%; border:1px solid #cfd4cf; border-radius:6px; padding:7px 8px; font-size:13px; margin:8px 0}
+  #form .row{display:flex; gap:8px}
+  #form .row button{flex:1; padding:7px 0; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--accent)}
+  footer{background:#fff; border-top:1px solid #d8dcd8; padding:6px 16px; display:flex; gap:22px; font-size:12px; color:var(--muted); flex-wrap:wrap}
+  footer b{color:var(--ink)}
+  .aviso{font-size:11px; color:var(--muted); border-top:1px dashed #d8dcd8; padding-top:10px}
+  #mapwrap.cad{cursor:crosshair}
+  /* ===== Mobile: sidebar vira painel inferior ===== */
+  @media (max-width:640px){
+    header{padding:8px 12px}
+    header .sub{display:none}
+    #app{flex-direction:column}
+    aside{width:100%; order:2; border-right:none; border-top:1px solid #d8dcd8;
+          max-height:42dvh; padding:10px 12px; gap:10px}
+    #filtros{display:grid; grid-template-columns:1fr 1fr; gap:2px}
+    .filtro{padding:7px 6px}
+    .botoes{display:flex; gap:8px}
+    footer{display:none}
+    .aviso{display:none}
+    .ctrl{top:auto; bottom:14px}
+    .ctrl button{width:44px; height:44px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>NascentesGeo</h1>
+  <span class="sub">Cadastro comunitário de nascentes — Reserva Fictícia da Serra do Ribeirão</span>
+  <span class="tag">demo · dados 100% sintéticos</span>
+  <span id="conStat" class="on">online</span>
+</header>
+<div id="app">
+  <aside>
+    <div>
+      <h2>Filtrar por status</h2>
+      <div id="filtros"></div>
+    </div>
+    <div class="botoes">
+      <button class="acao" id="btnNova">+ Cadastrar nascente</button>
+      <button class="acao sec" id="btnFit">Ajustar mapa</button>
+    </div>
+    <div id="offBox">
+      <h2>Uso offline</h2>
+      <button class="acao sec" id="btnBaixar">Baixar região p/ offline</button>
+      <div id="offProg"><i></i></div>
+      <div id="offInfo">Verificando…</div>
+    </div>
+    <div class="aviso">Projeto de portfólio. Domínio, cartografia e registros são fictícios, gerados por script. CRS de referência: SIRGAS 2000 (EPSG:4674).</div>
+  </aside>
+  <div id="mapwrap">
+    <svg id="svgbase" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="overlay"></div>
+    <div class="ctrl">
+      <button id="zin" title="Aproximar">+</button>
+      <button id="zout" title="Afastar">−</button>
+    </div>
+    <div id="popup"></div>
+    <div id="form"></div>
+  </div>
+</div>
+<footer>
+  <span>Lat/Lon: <b id="fCoord">—</b></span>
+  <span>Zoom: <b id="fZoom">—</b></span>
+  <span>Exibindo: <b id="fCount">—</b></span>
+  <span id="fModo"></span>
+</footer>
+<script src="data.js"></script>
+<script>
+const CORES = {REGISTRADA:'#2563eb', EM_ANALISE:'#d97706', VALIDADA:'#16a34a', REJEITADA:'#dc2626'};
+const ROTULOS = {REGISTRADA:'Registrada', EM_ANALISE:'Em análise', VALIDADA:'Validada', REJEITADA:'Rejeitada'};
+
+const wrap = document.getElementById('mapwrap');
+const svg = document.getElementById('svgbase');
+const overlay = document.getElementById('overlay');
+const popup = document.getElementById('popup');
+const form = document.getElementById('form');
+
+let base = null, nascentes = [];
+let ativos = new Set(Object.keys(CORES));
+let vw = {cx:-44.80, cy:-22.40, spanX:0.32};   // viewport geográfico
+let modoCadastro = false, pendente = null, proximoId = 1000;
+
+const W = () => wrap.clientWidth, H = () => wrap.clientHeight;
+const kx = () => W() / vw.spanX;
+const spanY = () => vw.spanX * H() / W() * 0.92;  // ~cos(lat) aproximado
+function toScr(lon, lat){ return [ (lon - vw.cx) * kx() + W()/2, (vw.cy - lat) * (H()/spanY()) + H()/2 ]; }
+function toGeo(px, py){ return [ (px - W()/2) / kx() + vw.cx, vw.cy - (py - H()/2) * spanY() / H() ]; }
+
+function desenhaBase(){
+  const estilos = {
+    reserva:{fill:'#f2f5ef', stroke:'#7a8f7a', sw:2, dash:'8 5'},
+    mata:{fill:'#d9e8d4', stroke:'#b8d0b0', sw:1},
+    lago:{fill:'#bcd8ef', stroke:'#7fb2d9', sw:1.5},
+    rio:{fill:'none', stroke:'#7fb2d9', sw:2.5},
+    trilha:{fill:'none', stroke:'#b08a5e', sw:1.6, dash:'5 5'},
+  };
+  let out = '';
+  for (const f of base.features){
+    const st = estilos[f.properties.layer]; if (!st) continue;
+    const anel = f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates;
+    const d = anel.map((p,i) => (i?'L':'M') + toScr(p[0], p[1]).map(v=>v.toFixed(1)).join(',')).join(' ');
+    out += `<path d="${d}" fill="${st.fill}" stroke="${st.stroke}" stroke-width="${st.sw}"` +
+           (st.dash ? ` stroke-dasharray="${st.dash}"` : '') +
+           (f.geometry.type === 'Polygon' ? ' fill-rule="evenodd"/>' : ' fill="none"/>');
+  }
+  const lago = base.features.find(f => f.properties.layer === 'lago');
+  if (lago){
+    const c = toScr(lago.geometry.coordinates[0][0][0], lago.geometry.coordinates[0][0][1]);
+    out += `<text x="${c[0]+8}" y="${c[1]+22}" font-size="11" fill="#4c7ba3" font-style="italic">Lago do Encontro</text>`;
+  }
+  svg.innerHTML = out;
+}
+
+function visiveis(){ return nascentes.filter(n => ativos.has(n.properties.status)); }
+
+function desenhaMarcadores(){
+  overlay.innerHTML = '';
+  const CEL = 58, grade = new Map();
+  for (const n of visiveis()){
+    const [x,y] = toScr(...n.geometry.coordinates);
+    if (x < -30 || y < -30 || x > W()+30 || y > H()+30) continue;
+    const ch = Math.floor(x/CEL) + ':' + Math.floor(y/CEL);
+    (grade.get(ch) || grade.set(ch, []).get(ch)).push({n, x, y});
+  }
+  let mostrados = 0;
+  for (const grupo of grade.values()){
+    if (grupo.length >= 4 && vw.spanX > 0.045){
+      const mx = grupo.reduce((s,g)=>s+g.x,0)/grupo.length, my = grupo.reduce((s,g)=>s+g.y,0)/grupo.length;
+      const el = document.createElement('div');
+      el.className = 'cluster'; el.textContent = grupo.length;
+      el.style.left = mx+'px'; el.style.top = my+'px';
+      el.onclick = () => { vw = {cx: toGeo(mx,my)[0], cy: toGeo(mx,my)[1], spanX: vw.spanX/2.4}; render(); };
+      overlay.appendChild(el); mostrados += grupo.length;
+    } else {
+      for (const g of grupo){
+        const el = document.createElement('div');
+        el.className = 'mk';
+        el.style.left = g.x+'px'; el.style.top = g.y+'px';
+        el.style.background = CORES[g.n.properties.status];
+        el.onclick = ev => { ev.stopPropagation(); abrePopup(g.n, g.x, g.y); };
+        overlay.appendChild(el); mostrados++;
+      }
+    }
+  }
+  if (pendente){
+    const [x,y] = toScr(...pendente);
+    const el = document.createElement('div');
+    el.className = 'mk'; el.style.left = x+'px'; el.style.top = y+'px';
+    el.style.background = '#111827';
+    overlay.appendChild(el);
+  }
+  document.getElementById('fCount').textContent = `${mostrados} de ${nascentes.length} nascentes`;
+  document.getElementById('fZoom').textContent = (0.32/vw.spanX).toFixed(1) + 'x';
+}
+
+function abrePopup(n, x, y){
+  const p = n.properties, st = p.status;
+  popup.innerHTML = `<span class="x" onclick="popup.style.display='none'">✕</span>
+    <h3>${p.nome}</h3>
+    <span class="badge" style="background:${CORES[st]}">${ROTULOS[st]}</span>
+    <div class="linha">Vazão estimada: ${p.vazaoEstimada}</div>
+    <div class="linha">Responsável: ${p.responsavel}</div>
+    <div class="linha">Registrada em: ${p.registradaEm}</div>
+    <div class="linha">${n.geometry.coordinates[1].toFixed(5)}, ${n.geometry.coordinates[0].toFixed(5)} (EPSG:4674)</div>`;
+  popup.style.display = 'block';
+  popup.style.left = Math.min(x + 14, W() - 245) + 'px';
+  popup.style.top = Math.max(y - 30, 10) + 'px';
+}
+
+function montaFiltros(){
+  const div = document.getElementById('filtros');
+  div.innerHTML = '';
+  for (const s of Object.keys(CORES)){
+    const qt = nascentes.filter(n => n.properties.status === s).length;
+    const lb = document.createElement('label');
+    lb.className = 'filtro';
+    lb.innerHTML = `<input type="checkbox" ${ativos.has(s)?'checked':''}> <span class="dot" style="background:${CORES[s]}"></span> ${ROTULOS[s]} <span class="qt">${qt}</span>`;
+    lb.querySelector('input').onchange = e => { e.target.checked ? ativos.add(s) : ativos.delete(s); render(); };
+    div.appendChild(lb);
+  }
+}
+
+function render(){ desenhaBase(); desenhaMarcadores(); }
+
+// ===== Pan / zoom com pointer events (mouse + toque unificados, pinch com 2 dedos) =====
+const ponteiros = new Map();     // pointerId -> {x, y}
+let drag = null, pinch = null;
+
+function posLocal(e){ const r = wrap.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+
+wrap.addEventListener('pointerdown', e => {
+  if (e.target.closest('.ctrl,#popup,#form')) return;
+  try{ wrap.setPointerCapture(e.pointerId); }catch(_){/* ponteiro sintético */}
+  ponteiros.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (ponteiros.size === 1 && !modoCadastro){
+    drag = {x:e.clientX, y:e.clientY, cx:vw.cx, cy:vw.cy, m:false};
+  } else if (ponteiros.size === 2){
+    drag = null;
+    const [a,b] = [...ponteiros.values()];
+    pinch = {d0: Math.hypot(a.x-b.x, a.y-b.y), span0: vw.spanX};
+  }
+});
+wrap.addEventListener('pointermove', e => {
+  const [px, py] = posLocal(e);
+  const [lon, lat] = toGeo(px, py);
+  document.getElementById('fCoord').textContent = lat.toFixed(5) + ', ' + lon.toFixed(5);
+  if (!ponteiros.has(e.pointerId)) return;
+  ponteiros.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (pinch && ponteiros.size === 2){
+    const [a,b] = [...ponteiros.values()];
+    const d = Math.hypot(a.x-b.x, a.y-b.y);
+    if (d > 20){
+      const r = wrap.getBoundingClientRect();
+      const mx = (a.x+b.x)/2 - r.left, my = (a.y+b.y)/2 - r.top;
+      const alvo = toGeo(mx, my);                       // ponto sob o centro do pinch…
+      vw.spanX = Math.min(0.9, Math.max(0.01, pinch.span0 * pinch.d0 / d));
+      const novo = toGeo(mx, my);                       // …fica ancorado após o zoom
+      vw.cx += alvo[0] - novo[0]; vw.cy += alvo[1] - novo[1];
+      popup.style.display = 'none';
+      render();
+    }
+  } else if (drag){
+    if (Math.abs(e.clientX-drag.x) + Math.abs(e.clientY-drag.y) > 5) drag.m = true;
+    if (drag.m){
+      vw.cx = drag.cx - (e.clientX - drag.x) / kx();
+      vw.cy = drag.cy + (e.clientY - drag.y) * spanY() / H();
+      render();
+    }
+  }
+});
+function soltaPonteiro(e){
+  ponteiros.delete(e.pointerId);
+  if (ponteiros.size < 2) pinch = null;
+  if (ponteiros.size === 0) drag = null;
+}
+wrap.addEventListener('pointerup', soltaPonteiro);
+wrap.addEventListener('pointercancel', soltaPonteiro);
+
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const [px, py] = posLocal(e);
+  zoom(e.deltaY < 0 ? 1/1.3 : 1.3, px, py);
+}, {passive:false});
+
+function zoom(f, px, py){
+  const ancora = (px !== undefined) ? toGeo(px, py) : null;
+  vw.spanX = Math.min(0.9, Math.max(0.01, vw.spanX * f));
+  if (ancora){
+    const novo = toGeo(px, py);
+    vw.cx += ancora[0] - novo[0]; vw.cy += ancora[1] - novo[1];
+  }
+  popup.style.display = 'none';
+  render();
+}
+document.getElementById('zin').onclick = () => zoom(1/1.4);
+document.getElementById('zout').onclick = () => zoom(1.4);
+document.getElementById('btnFit').onclick = () => { vw = {cx:-44.80, cy:-22.40, spanX:0.32}; render(); };
+
+// ===== Cadastro por clique/toque no mapa =====
+const btnNova = document.getElementById('btnNova');
+btnNova.onclick = () => {
+  modoCadastro = !modoCadastro;
+  wrap.classList.toggle('cad', modoCadastro);
+  btnNova.textContent = modoCadastro ? 'Toque no mapa…' : '+ Cadastrar nascente';
+  document.getElementById('fModo').innerHTML = modoCadastro ? '<b style="color:#0f4c5c">MODO CADASTRO: toque no mapa para posicionar</b>' : '';
+};
+wrap.addEventListener('click', e => {
+  if (!modoCadastro || (drag && drag.m)) return;
+  if (e.target.closest('.mk,.cluster,.ctrl,#popup,#form')) return;
+  const [px, py] = posLocal(e);
+  pendente = toGeo(px, py);
+  render();
+  form.innerHTML = `<h3 style="font-size:13px">Nova nascente</h3>
+    <div class="linha" style="font-size:11px;color:#6b7280">${pendente[1].toFixed(5)}, ${pendente[0].toFixed(5)} (EPSG:4674)</div>
+    <input id="fNome" placeholder="Nome da nascente" maxlength="40">
+    <div class="row"><button style="background:#fff;color:#0f4c5c" id="fCanc">Cancelar</button>
+    <button style="background:#0f4c5c;color:#fff" id="fOk">Salvar</button></div>`;
+  form.style.display = 'block';
+  form.style.left = Math.min(px + 14, W() - 245) + 'px';
+  form.style.top = Math.max(py - 30, 10) + 'px';
+  document.getElementById('fNome').focus();
+  document.getElementById('fCanc').onclick = () => { pendente = null; form.style.display='none'; render(); };
+  document.getElementById('fOk').onclick = () => {
+    const nome = document.getElementById('fNome').value.trim() || `Nascente Sem Nome ${proximoId}`;
+    nascentes.push({type:'Feature', geometry:{type:'Point', coordinates:pendente},
+      properties:{id:proximoId++, nome, status:'REGISTRADA', vazaoEstimada:'—',
+                  responsavel:'Você (demo)', registradaEm:new Date().toISOString().slice(0,10)}});
+    pendente = null; form.style.display='none';
+    btnNova.click(); montaFiltros(); render();
+  };
+});
+window.addEventListener('resize', render);
+
+// ===== Offline: IndexedDB + chunks com verificação de integridade =====
+// Padrão: o service worker cacheia o APP SHELL; os DADOS vetoriais são baixados
+// sob demanda em chunks, verificados por SHA-256 e guardados em IndexedDB.
+const DB_NOME = 'nascentesgeo', DB_V = 1;
+function abreDB(){
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open(DB_NOME, DB_V);
+    rq.onupgradeneeded = () => {
+      rq.result.createObjectStore('chunks');
+      rq.result.createObjectStore('meta');
+    };
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+function idb(db, store, modo, fn){
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, modo);
+    const rq = fn(tx.objectStore(store));
+    tx.oncomplete = () => res(rq.result);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function sha256hex(buf){
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+const fmtKB = b => (b/1024).toFixed(1).replace('.', ',') + ' KB';
+
+const offInfo = document.getElementById('offInfo');
+const offProg = document.getElementById('offProg');
+const offBar = offProg.querySelector('i');
+const btnBaixar = document.getElementById('btnBaixar');
+
+async function estadoOffline(){
+  try{
+    const db = await abreDB();
+    const meta = await idb(db, 'meta', 'readonly', s => s.get('regiao'));
+    if (meta){
+      offInfo.innerHTML = `Região salva em <b>${meta.salvaEm}</b> · <b>${fmtKB(meta.bytes)}</b> · ${meta.chunks} chunks · íntegra ✓`;
+      btnBaixar.textContent = 'Atualizar região offline';
+    } else {
+      offInfo.textContent = 'Nenhuma região salva neste aparelho.';
+    }
+    return meta;
+  } catch(e){ offInfo.textContent = 'IndexedDB indisponível.'; return null; }
+}
+
+btnBaixar.onclick = async () => {
+  btnBaixar.disabled = true;
+  try{
+    const man = await (await fetch('chunks/manifest.json', {cache:'no-store'})).json();
+    offInfo.textContent = `Baixando ${man.chunks.length} chunks (~${fmtKB(man.totalBytes)})…`;
+    offProg.style.display = 'block'; offBar.style.width = '0%';
+    const db = await abreDB();
+    let feitos = 0, bytes = 0;
+    for (const c of man.chunks){
+      const buf = await (await fetch('chunks/' + c.file, {cache:'no-store'})).arrayBuffer();
+      const hash = await sha256hex(buf);
+      if (hash !== c.sha256) throw new Error('Integridade falhou em ' + c.file);
+      await idb(db, 'chunks', 'readwrite', s => s.put(new TextDecoder().decode(buf), c.file));
+      feitos++; bytes += buf.byteLength;
+      offBar.style.width = Math.round(100*feitos/man.chunks.length) + '%';
+      offInfo.textContent = `Baixando… ${feitos}/${man.chunks.length} · ${fmtKB(bytes)} · integridade ok`;
+    }
+    await idb(db, 'meta', 'readwrite', s => s.put({
+      salvaEm: new Date().toLocaleDateString('pt-BR'), bytes, chunks: feitos, manifest: man
+    }, 'regiao'));
+    offProg.style.display = 'none';
+    await estadoOffline();
+  } catch(e){
+    offProg.style.display = 'none';
+    offInfo.textContent = 'Falha no download: ' + e.message;
+  }
+  btnBaixar.disabled = false;
+};
+
+async function lerRegiaoOffline(){
+  const db = await abreDB();
+  const meta = await idb(db, 'meta', 'readonly', s => s.get('regiao'));
+  if (!meta) return null;
+  const feats = [];
+  let baseOff = null;
+  for (const c of meta.manifest.chunks){
+    const txt = await idb(db, 'chunks', 'readonly', s => s.get(c.file));
+    if (!txt) return null;
+    const j = JSON.parse(txt);
+    if (c.tipo === 'base') baseOff = j;
+    else feats.push(...j.features);
+  }
+  return {base: baseOff, nascentes: feats};
+}
+
+// ===== Status de conexão =====
+const conStat = document.getElementById('conStat');
+function atualizaCon(){
+  const on = navigator.onLine;
+  conStat.textContent = on ? 'online' : 'offline';
+  conStat.className = on ? 'on' : 'off';
+}
+window.addEventListener('online', atualizaCon);
+window.addEventListener('offline', atualizaCon);
+atualizaCon();
+
+// ===== Carga de dados: rede primeiro, IndexedDB como fallback =====
+async function carrega(){
+  try{
+    const [b, n] = await Promise.all(
+      // cache:'no-store' — sem rede o fetch FALHA de verdade e o fallback é o IndexedDB
+      [fetch('base-cartografica.json', {cache:'no-store'}), fetch('nascentes.json', {cache:'no-store'})].map(p => p.then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }))
+    );
+    base = b; nascentes = n.features;
+  } catch(e){
+    const off = await lerRegiaoOffline().catch(() => null);
+    if (off && off.base){
+      base = off.base; nascentes = off.nascentes;
+      document.getElementById('fModo').innerHTML = '<b style="color:#b45309">DADOS DA REGIÃO OFFLINE</b>';
+    } else if (window.DADOS_EMBUTIDOS){
+      // Último fallback: a demo nunca abre vazia (ex.: aberta via file://)
+      base = DADOS_EMBUTIDOS.base; nascentes = DADOS_EMBUTIDOS.pontos.features;
+      document.getElementById('fModo').innerHTML = '<b style="color:#b45309">DADOS EMBUTIDOS</b>';
+    } else {
+      offInfo.textContent = 'Sem rede e sem região salva — baixe a região quando estiver online.';
+      return;
+    }
+  }
+  montaFiltros(); render();
+}
+carrega();
+if (location.protocol === 'file:'){
+  btnBaixar.disabled = true;
+  offInfo.innerHTML = 'Aberto como arquivo local: o mapa funciona, mas PWA e modo offline exigem servidor — dê dois cliques em <b>testar.cmd</b> na raiz do projeto.';
+} else {
+  estadoOffline();
+}
+
+// ===== Service worker (app shell) =====
+if ('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(() => {/* fora de https/localhost o SW não registra */});
+}
+</script>
+</body>
+</html>

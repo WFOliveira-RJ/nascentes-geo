@@ -1,0 +1,61 @@
+{
+ "regiao": "Reserva Fictícia da Serra do Ribeirão",
+ "bbox": [
+  -44.902579,
+  -22.474939,
+  -44.690911,
+  -22.314328
+ ],
+ "grid": 3,
+ "totalBytes": 29061,
+ "chunks": [
+  {
+   "file": "base.json",
+   "tipo": "base",
+   "bytes": 11152,
+   "sha256": "b6aeb673d2fb9efdd3812a2bb08faa2ab69d67d4e23412efb36514dd32dc89d6"
+  },
+  {
+   "file": "n-0-0.json",
+   "tipo": "nascentes",
+   "qt": 14,
+   "bytes": 3565,
+   "sha256": "2aef175b89f5393b179fdbead0abcbde45864cae6430ced97a8dfb38c8a4cb8f"
+  },
+  {
+   "file": "n-0-2.json",
+   "tipo": "nascentes",
+   "qt": 14,
+   "bytes": 3562,
+   "sha256": "0a2a888b6d8aca4137318179dc7d3d46e762a886b5cb0294ef9a3c6764773829"
+  },
+  {
+   "file": "n-1-2.json",
+   "tipo": "nascentes",
+   "qt": 14,
+   "bytes": 3596,
+   "sha256": "c4247260c7df88b394cdff1042cc1f2cd9e91a4d293f33a452d7ee7026d87842"
+  },
+  {
+   "file": "n-2-0.json",
+   "tipo": "nascentes",
+   "qt": 14,
+   "bytes": 3577,
+   "sha256": "71e9aee40f2e19dc842262384dbb1595f8d600b83eb582b724731ee033523d48"
+  },
+  {
+   "file": "n-2-1.json",
+   "tipo": "nascentes",
+   "qt": 2,
+   "bytes": 547,
+   "sha256": "e921bc14712fda8eec2a819f323275d4ed7cd4c86d7741f4830d833d831c420b"
+  },
+  {
+   "file": "n-2-2.json",
+   "tipo": "nascentes",
+   "qt": 12,
+   "bytes": 3062,
+   "sha256": "707f840bcb842cfea8684ad60345457eb4380c8c388b6a527f6f597cd9e54116"
+  }
+ ]
+}
